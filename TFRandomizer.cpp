@@ -448,8 +448,24 @@ int RandomizePacks(const char* inShopScript, const char* outShopScript, off_t Bo
 
     for (BoxInfo* i : ShopBoxes)
     {
-        i->packCount = bRandom_MinMax(MinPackCount, MaxPackCount) & 0xFFFF;
-        i->packPrice = bRandom_MinMax(MinPackPrice, MaxPackPrice) & 0xFFFF;
+        if ((MinPackCount > 0) && (MaxPackCount > 0))
+        {
+            if (MaxPackCount < MinPackCount)
+                MaxPackCount = MinPackCount;
+
+            MinPackCount &= 0xFFFF;
+            MaxPackCount &= 0xFFFF;
+
+            i->packCount = bRandom_MinMax(MinPackCount, MaxPackCount) & 0xFFFF;
+        }
+
+        if ((MinPackPrice >= 0) && (MaxPackPrice >= 0))
+        {
+            MinPackPrice &= 0xFFFF;
+            MaxPackPrice &= 0xFFFF;
+
+            i->packPrice = bRandom_MinMax(MinPackPrice, MaxPackPrice) & 0xFFFF;
+        }
 
         // we do NOT modify the pointers - they stay clean! copy the pointer first, edit it and then dereference!
         PackInfo* pi = (PackInfo*)i->packPointer;
@@ -461,28 +477,28 @@ int RandomizePacks(const char* inShopScript, const char* outShopScript, off_t Bo
         cardIDs = (uint16_t*)(pcast)((pcast)cardIDs + (pcast)ShopPrxMem + SegmentOffset);
         for (int j = 0; j < pi->commonCardCount; j++)
         {
-            cardIDs[j] = CardIDList.at(bRandom_Custom(CardIDList.size()) % CardIDList.size());
+            cardIDs[j] = CardIDList.at(bRandom_Custom(CardIDList.size() - 1));
         }
 
         cardIDs = (uint16_t*)pi->superRareCardIDsPointer;
         cardIDs = (uint16_t*)(pcast)((pcast)cardIDs + (pcast)ShopPrxMem + SegmentOffset);
         for (int j = 0; j < pi->superRareCardCount; j++)
         {
-            cardIDs[j] = CardIDList.at(bRandom_Custom(CardIDList.size()) % CardIDList.size());
+            cardIDs[j] = CardIDList.at(bRandom_Custom(CardIDList.size() - 1));
         }
 
         cardIDs = (uint16_t*)pi->ultraRareCardIDsPointer;
         cardIDs = (uint16_t*)(pcast)((pcast)cardIDs + (pcast)ShopPrxMem + SegmentOffset);
         for (int j = 0; j < pi->ultraRareCardCount; j++)
         {
-            cardIDs[j] = CardIDList.at(bRandom_Custom(CardIDList.size()) % CardIDList.size());
+            cardIDs[j] = CardIDList.at(bRandom_Custom(CardIDList.size() - 1));
         }
 
         cardIDs = (uint16_t*)pi->ultimateRareCardIDsPointer;
         cardIDs = (uint16_t*)(pcast)((pcast)cardIDs + (pcast)ShopPrxMem + SegmentOffset);
         for (int j = 0; j < pi->ultimateRareCardCount; j++)
         {
-            cardIDs[j] = CardIDList.at(bRandom_Custom(CardIDList.size()) % CardIDList.size());
+            cardIDs[j] = CardIDList.at(bRandom_Custom(CardIDList.size() - 1));
         }
     }
 
@@ -511,6 +527,9 @@ void ShowHelp(char* firstarg)
     std::cout << "\n";
     std::cout << "Shuffled recipes do not contain duplicates, while randomized may contain duplicated recipes.\n";
     std::cout << "IncludePlayerRecipe can either be 0 or 1. If enabled, player's starter deck will also be randomized.\n";
+    std::cout << "If the min/max prices are set below 0, they will not be randomized.\n";
+    std::cout << "If the min/max sizes are set equal or below 0, they will not be randomized.\n";
+    std::cout << "Minimum size/price cannot be larger than the maximum\n";
     std::cout << "RandomizerSeed has to be a number, which is optional. If omitted, seed will be set from the current time of execution.\n";
 }
 
@@ -602,10 +621,10 @@ int main(int argc, char* argv[])
 
             LoadCardIDList(argv[2]);
 
-            MinPackPrice = stoul(argv[7]) & 0xFFFF;
-            MaxPackPrice = stoul(argv[8]) & 0xFFFF;
-            MinPackCount = stoul(argv[9]) & 0xFFFF;
-            MaxPackCount = stoul(argv[10]) & 0xFFFF;
+            MinPackPrice = stol(argv[7]);
+            MaxPackPrice = stol(argv[8]);
+            MinPackCount = stol(argv[9]);
+            MaxPackCount = stol(argv[10]);
 
             RandomizePacks(argv[3], argv[11], stoul(argv[4], nullptr, 16), stoul(argv[5], nullptr, 16), stoul(argv[6]));
 
