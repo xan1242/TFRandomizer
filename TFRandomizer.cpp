@@ -586,13 +586,11 @@ int main(int argc, char* argv[])
 
             if ((argv[1][2] == 's'))
             {
-                ShuffleRecipes(argv[2], argv[3], bPlayerRecipe);
-                return 0;
+                return ShuffleRecipes(argv[2], argv[3], bPlayerRecipe);
             }
             if ((argv[1][2] == 'r'))
             {
-                RandomizeRecipes(argv[2], argv[3], bPlayerRecipe);
-                return 0;
+                return RandomizeRecipes(argv[2], argv[3], bPlayerRecipe);
             }
         }
         if ((argv[1][1] == 's'))
@@ -626,11 +624,7 @@ int main(int argc, char* argv[])
             MinPackCount = stol(argv[9]);
             MaxPackCount = stol(argv[10]);
 
-
-
-            RandomizePacks(argv[3], argv[11], stoul(argv[4], nullptr, 16), stoul(argv[5], nullptr, 16), stoul(argv[6]));
-
-            return 0;
+            return RandomizePacks(argv[3], argv[11], stoul(argv[4], nullptr, 16), stoul(argv[5], nullptr, 16), stoul(argv[6]));;
         }
     }
 
