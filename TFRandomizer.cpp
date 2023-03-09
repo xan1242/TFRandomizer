@@ -456,7 +456,7 @@ int RandomizePacks(const char* inShopScript, const char* outShopScript, off_t Bo
             MinPackCount &= 0xFFFF;
             MaxPackCount &= 0xFFFF;
 
-            i->packCount = bRandom_MinMax(MinPackCount, MaxPackCount) & 0xFFFF;
+            i->packCount = bRandom_MinMax(MinPackCount * 4, MaxPackCount * 4) & 0xFFFF;
         }
 
         if ((MinPackPrice >= 0) && (MaxPackPrice >= 0))
@@ -464,7 +464,7 @@ int RandomizePacks(const char* inShopScript, const char* outShopScript, off_t Bo
             MinPackPrice &= 0xFFFF;
             MaxPackPrice &= 0xFFFF;
 
-            i->packPrice = bRandom_MinMax(MinPackPrice, MaxPackPrice) & 0xFFFF;
+            i->packPrice = bRandom_MinMax(MinPackPrice * 4, MaxPackPrice * 4) & 0xFFFF;
         }
 
         // we do NOT modify the pointers - they stay clean! copy the pointer first, edit it and then dereference!
@@ -625,6 +625,8 @@ int main(int argc, char* argv[])
             MaxPackPrice = stol(argv[8]);
             MinPackCount = stol(argv[9]);
             MaxPackCount = stol(argv[10]);
+
+
 
             RandomizePacks(argv[3], argv[11], stoul(argv[4], nullptr, 16), stoul(argv[5], nullptr, 16), stoul(argv[6]));
 
