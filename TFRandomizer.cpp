@@ -464,7 +464,7 @@ int RandomizePacks(const char* inShopScript, const char* outShopScript, off_t Bo
             MinPackPrice &= 0xFFFF;
             MaxPackPrice &= 0xFFFF;
 
-            i->packPrice = bRandom_MinMax(MinPackPrice * 4, MaxPackPrice * 4) & 0xFFFF;
+            i->packPrice = bRandom_MinMax(MinPackPrice, MaxPackPrice) & 0xFFFF;
         }
 
         // we do NOT modify the pointers - they stay clean! copy the pointer first, edit it and then dereference!
