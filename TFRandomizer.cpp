@@ -9,7 +9,7 @@
 // You can find the shop data manually by searching it in a tool like IDA.
 // 
 // TF3 offsets:
-// BoxInfoOffset = @file 0x20324, @mem 0x202D0
+// BoxInfoOffset = @file 0x2031C, @mem 0x202C8
 // SegmentOffset = @file - @mem = 0x54
 // BoxCount = 48
 // 
@@ -40,19 +40,6 @@
 #define path_separator_char '/'
 #endif
 
-#if _WIN64
-#define pcast int64_t
-#else
-#if __GNUC__
-#if __x86_64__ || __ppc64__ || __MINGW64__ || __aarch64__
-#define pcast int64_t
-#endif
-#else
-#define pcast int32_t
-#endif
-#define pcast int32_t
-#endif
-
 using namespace std;
 namespace fs = std::filesystem;
 
@@ -68,14 +55,22 @@ struct PackInfo
     uint32_t ultimateRareCardCount;
 };
 
+#ifdef _MSC_VER
+#pragma pack(push, 1)
+#endif
 struct BoxInfo
 {
-    uint32_t packPointer;
-    uint16_t packCount;
-    uint16_t unk1;
+    uint8_t packCount;
+    uint8_t unk1;
+    uint8_t pad1;
+    uint8_t pad2;
     uint16_t packPrice;
     uint16_t unk2;
+    uint32_t packPointer;
 };
+#ifdef _MSC_VER
+#pragma pack(pop)
+#endif
 
 vector<string> FileDirectoryListing;
 vector<string> FileDirectoryListingRandomized;
@@ -413,34 +408,36 @@ int LoadCardIDList(const char* Filename)
 // BoxInfoOffset = offset of box info in the file (Tag Force 3 (ULES01183) example: 0x20324)
 // SegmentOffset = offset of the memory segment from the file start (Tag Force 3 (ULES01183) example: 0x54)
 // BoxCount = number of boxes in the script
-int RandomizePacks(const char* inShopScript, const char* outShopScript, off_t BoxInfoOffset, off_t SegmentOffset, int BoxCount)
+int RandomizePacks(std::filesystem::path inShopScript, std::filesystem::path outShopScript, off_t BoxInfoOffset, off_t SegmentOffset, int BoxCount)
 {
     std::cout << "Opening file: " << inShopScript << "\n";
+    
+    std::ifstream fin;
+    fin.open(inShopScript, std::ios::binary);
 
-    FILE* fin = fopen(inShopScript, "rb");
-    if (!fin)
+    if (!fin.is_open())
     {
-        std::cout << "ERROR: Can't open file for reading: " << inShopScript << "\n";
-        perror("ERROR");
+        std::cout << "ERROR: Can't open file for reading: " << inShopScript << "\nReason: " << strerror(errno) << '\n';
         return -1;
     }
 
     std::cout << "Loading Shop EhScript to memory...\n";
 
     // load the PRX to memory
-    size_t shopsize = fs::file_size(inShopScript);
+    size_t shopsize = std::filesystem::file_size(inShopScript);
     ShopPrxMem = malloc(shopsize);
     if (!ShopPrxMem)
     {
         std::cout << "Error allocating memory.\n";
         return -1;
     }
-    fread(ShopPrxMem, shopsize, 1, fin);
-    fclose(fin);
+
+    fin.read((char*)ShopPrxMem, shopsize);
+    fin.close();
 
     for (int i = 0; i < BoxCount; i++)
     {
-        BoxInfo* boxptr = (BoxInfo*)((pcast)ShopPrxMem + BoxInfoOffset + sizeof(BoxInfo) * i);
+        BoxInfo* boxptr = (BoxInfo*)((uintptr_t)ShopPrxMem + BoxInfoOffset + sizeof(BoxInfo) * i);
         ShopBoxes.push_back(boxptr);
     }
 
@@ -453,10 +450,10 @@ int RandomizePacks(const char* inShopScript, const char* outShopScript, off_t Bo
             if (MaxPackCount < MinPackCount)
                 MaxPackCount = MinPackCount;
 
-            MinPackCount &= 0xFFFF;
+            MinPackCount &= 0xFF;
             MaxPackCount &= 0xFFFF;
 
-            i->packCount = bRandom_MinMax(MinPackCount * 4, MaxPackCount * 4) & 0xFFFF;
+            i->packCount = bRandom_MinMax(MinPackCount * 4, MaxPackCount * 4) & 0xFF;
         }
 
         if ((MinPackPrice >= 0) && (MaxPackPrice >= 0))
@@ -469,33 +466,33 @@ int RandomizePacks(const char* inShopScript, const char* outShopScript, off_t Bo
 
         // we do NOT modify the pointers - they stay clean! copy the pointer first, edit it and then dereference!
         PackInfo* pi = (PackInfo*)i->packPointer;
-        pi = (PackInfo*)(pcast)((pcast)pi + (pcast)ShopPrxMem + SegmentOffset);
+        pi = (PackInfo*)(uintptr_t)((uintptr_t)pi + (uintptr_t)ShopPrxMem + SegmentOffset);
 
         uint16_t* cardIDs;
 
         cardIDs = (uint16_t*)pi->commonCardIDsPointer;
-        cardIDs = (uint16_t*)(pcast)((pcast)cardIDs + (pcast)ShopPrxMem + SegmentOffset);
+        cardIDs = (uint16_t*)(uintptr_t)((uintptr_t)cardIDs + (uintptr_t)ShopPrxMem + SegmentOffset);
         for (int j = 0; j < pi->commonCardCount; j++)
         {
             cardIDs[j] = CardIDList.at(bRandom_Custom(CardIDList.size() - 1));
         }
 
         cardIDs = (uint16_t*)pi->superRareCardIDsPointer;
-        cardIDs = (uint16_t*)(pcast)((pcast)cardIDs + (pcast)ShopPrxMem + SegmentOffset);
+        cardIDs = (uint16_t*)(uintptr_t)((uintptr_t)cardIDs + (uintptr_t)ShopPrxMem + SegmentOffset);
         for (int j = 0; j < pi->superRareCardCount; j++)
         {
             cardIDs[j] = CardIDList.at(bRandom_Custom(CardIDList.size() - 1));
         }
 
         cardIDs = (uint16_t*)pi->ultraRareCardIDsPointer;
-        cardIDs = (uint16_t*)(pcast)((pcast)cardIDs + (pcast)ShopPrxMem + SegmentOffset);
+        cardIDs = (uint16_t*)(uintptr_t)((uintptr_t)cardIDs + (uintptr_t)ShopPrxMem + SegmentOffset);
         for (int j = 0; j < pi->ultraRareCardCount; j++)
         {
             cardIDs[j] = CardIDList.at(bRandom_Custom(CardIDList.size() - 1));
         }
 
         cardIDs = (uint16_t*)pi->ultimateRareCardIDsPointer;
-        cardIDs = (uint16_t*)(pcast)((pcast)cardIDs + (pcast)ShopPrxMem + SegmentOffset);
+        cardIDs = (uint16_t*)(uintptr_t)((uintptr_t)cardIDs + (uintptr_t)ShopPrxMem + SegmentOffset);
         for (int j = 0; j < pi->ultimateRareCardCount; j++)
         {
             cardIDs[j] = CardIDList.at(bRandom_Custom(CardIDList.size() - 1));
@@ -504,16 +501,17 @@ int RandomizePacks(const char* inShopScript, const char* outShopScript, off_t Bo
 
     std::cout << "Writing output file: " << outShopScript << "\n";
 
-    FILE* fout = fopen(outShopScript, "wb");
-    if (!fout)
+    std::ofstream fout;
+    fout.open(outShopScript, std::ios::binary);
+    if (!fout.is_open())
     {
-        std::cout << "ERROR: Can't open file for writing: " << outShopScript << "\n";
-        perror("ERROR");
+        std::cout << "ERROR: Can't open file for writing: " << outShopScript << "\nReason: " << strerror(errno) << '\n';
         return -1;
     }
 
-    fwrite(ShopPrxMem, shopsize, 1, fout);
-    fclose(fout);
+    fout.write((char*)ShopPrxMem, shopsize);
+    fout.close();
+
     free(ShopPrxMem);
 
     return 0;
