@@ -13,6 +13,11 @@
 // SegmentOffset = @file - @mem = 0x54
 // BoxCount = 48
 // 
+// TF5 offsets:
+// BoxInfoOffset = @file 0x23090, @mem 0x2303C
+// SegmentOffset = @file - @mem = 0x54
+// BoxCount = 60
+// 
 
 
 
