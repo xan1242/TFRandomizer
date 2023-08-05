@@ -66,7 +66,7 @@ This command requires a lot of information to function properly.
 
 - InShopPrx: the shop prx file you got out of the ISO
 
-- BoxInfoOffset: offset of box info in the file (Tag Force 3 (ULES01183) example: 0x20324)
+- BoxInfoOffset: offset of box info in the file (Tag Force 3 (ULES01183) example: 0x2031C)
 
 - SegmentOffset: offset of the memory segment from the file start (Tag Force 3 (ULES01183) example: 0x54)
 
