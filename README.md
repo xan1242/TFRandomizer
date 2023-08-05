@@ -12,11 +12,13 @@ More ideas on what to randomize are welcome! If you have any ideas, open an issu
 
 This tool should be game agnostic as long as you provide the correct parameters.
 
-Currently this was only tested with Tag Force 3. More games (and their parameters) are to come!
+Currently this was only tested with Tag Force 3 EU and Tag Force 5 US. More games (and their parameters) are to come!
 
 ## Usage
 
-This is a command-line based version of the tool. Currently it is a very involved process to get results. A GUI wrapper is planned as well, but in the meantime, this is how you use it.
+This is a command-line based version of the tool. Currently it is a very involved process to get results. 
+
+A GUI wrapper is available [here](https://github.com/xan1242/TFRandomizerGUI), but if you wish to use this manually, this is how you do it:
 
 ## Data preparation
 
@@ -42,8 +44,6 @@ Basic usage to randomize:
 
 `TFRandomizer -rr RecipeFolder OutFolder IncludePlayerRecipe [RandomizerSeed]`
 
-
-
 Both do very similar things. The difference is that shuffler will not duplicate decks, whereas randomizer may do it.
 
 - RecipeFolder: the folder of the recipe EHP extracted by the ehppack tool
@@ -59,8 +59,6 @@ Both do very similar things. The difference is that shuffler will not duplicate 
 Basic usage:
 
 `TFRandomizer -s CardIDList InShopPrx BoxInfoOffset SegmentOffset BoxCount MinPackPrice MaxPackPrice MinPackSize MaxPackSize OutShopPrx [RandomizerSeed]`
-
-
 
 This command requires a lot of information to function properly.
 
@@ -86,22 +84,12 @@ This command requires a lot of information to function properly.
 
 You can find the shop data manually by searching it in a tool like IDA.
 
-Currently, only Tag Force 3 (ULES01183) is known. More is to come.
+Here are the currently known ones:
 
-
-
-Tag Force 3 offsets:
-
-```
-TF3 offsets:
-BoxInfoOffset = @file 0x20324, @mem 0x202D0
-SegmentOffset = @file - @mem = 0x54
-BoxCount = 48
-```
-
-(todo - insert a table here when there's more available)
-
-
+| Game                   | BoxInfoOffset (file) | BoxInfoOffset (mem) | SegmentOffset | BoxCount |
+| ---------------------- | -------------------- | ------------------- | ------------- | -------- |
+| Tag Force 3 ULES-01183 | 0x2031C              | 0x202C8             | 0x54          | 48       |
+| Tag Force 5 ULUS-10555 | 0x23090              | 0x2303C             | 0x54          | 60       |
 
 ## Using randomized recipes
 
@@ -109,6 +97,18 @@ Currently there is no easy way to utilize these other than by hex editing the da
 
 A modification to the EBOOT is required in order to redirect the embedded files to files on disc. This is necessary in case the EHP file is bigger than what it fits to the EBOOT.
 
-As of now I've only written the modification for Tag Force 3. This will be made public once the GUI tool is made as well. This will probably be written as a patcher option either integrated into TFRandomizer or made separately.
+As of now I've only written the modifications for Tag Force 3 EU and Tag Force 5 US.
+
+
+
+The modified EBOOTs can be found here:
+
+- Tag Force 3 EU: https://github.com/xan1242/TFRandomizerGUI/tree/master/TF3_EU
+
+- Tag Force 5 US: https://github.com/xan1242/TFRandomizerGUI/tree/master/TF5_US
+
+
+
+The current plan is to write a PRX plugin which will do these modifications during runtime and hopefully simplfy the process!
 
 
